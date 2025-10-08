@@ -15,7 +15,7 @@ from api.schemas.presupuesto import PresupuestoUpdate
 router = APIRouter()
 
 
-@router.post("/",
+@router.post("/presupuestos",
              response_model=PresupuestoSchema,
              status_code=status.HTTP_201_CREATED)
 def create_presupuesto(presupuesto_data: PresupuestoCreate,
@@ -34,7 +34,7 @@ def create_presupuesto(presupuesto_data: PresupuestoCreate,
   return nuevo_presupuesto
 
 
-@router.get("/{presupuesto_id}", response_model=PresupuestoSchema)
+@router.get("/presupuestos/{presupuesto_id}", response_model=PresupuestoSchema)
 def get_presupuesto(presupuesto_id: int,
                     db: Session = Depends(database.get_db),
                     current_user: Usuario = Depends(get_current_user)):
@@ -47,7 +47,7 @@ def get_presupuesto(presupuesto_id: int,
   return presupuesto
 
 
-@router.get("/", response_model=list[PresupuestoSchema])
+@router.get("/presupuestos", response_model=list[PresupuestoSchema])
 def get_presupuestos(skip: int = 0,
                      limit: int = 100,
                      db: Session = Depends(database.get_db),
@@ -58,7 +58,7 @@ def get_presupuestos(skip: int = 0,
   return presupuestos
 
 
-@router.put("/{presupuesto_id}", response_model=PresupuestoSchema)
+@router.put("/presupuestos/{presupuesto_id}", response_model=PresupuestoSchema)
 def update_presupuesto(presupuesto_id: int,
                        presupuesto_data: PresupuestoUpdate,
                        db: Session = Depends(database.get_db),
@@ -79,7 +79,8 @@ def update_presupuesto(presupuesto_id: int,
   return presupuesto
 
 
-@router.delete("/{presupuesto_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/presupuestos/{presupuesto_id}",
+               status_code=status.HTTP_204_NO_CONTENT)
 def delete_presupuesto(presupuesto_id: int,
                        db: Session = Depends(database.get_db),
                        current_user: Usuario = Depends(get_current_user)):

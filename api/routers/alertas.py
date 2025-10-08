@@ -15,7 +15,7 @@ from api.schemas.alerta import AlertaUpdate
 router = APIRouter()
 
 
-@router.post("/",
+@router.post("/alertas",
              response_model=AlertaSchema,
              status_code=status.HTTP_201_CREATED)
 def create_alerta(alerta_data: AlertaCreate,
@@ -40,7 +40,7 @@ def create_alerta(alerta_data: AlertaCreate,
   return nueva_alerta
 
 
-@router.get("/{alerta_id}", response_model=AlertaSchema)
+@router.get("/alertas/{alerta_id}", response_model=AlertaSchema)
 def get_alerta(alerta_id: int,
                db: Session = Depends(database.get_db),
                current_user: Usuario = Depends(get_current_user)):
@@ -53,7 +53,7 @@ def get_alerta(alerta_id: int,
   return alerta
 
 
-@router.get("/", response_model=list[AlertaSchema])
+@router.get("/alertas", response_model=list[AlertaSchema])
 def get_alertas(skip: int = 0,
                 limit: int = 100,
                 db: Session = Depends(database.get_db),
@@ -63,7 +63,7 @@ def get_alertas(skip: int = 0,
   return alertas
 
 
-@router.put("/{alerta_id}", response_model=AlertaSchema)
+@router.put("/alertas/{alerta_id}", response_model=AlertaSchema)
 def update_alerta(alerta_id: int,
                   alerta_data: AlertaUpdate,
                   db: Session = Depends(database.get_db),
@@ -84,7 +84,7 @@ def update_alerta(alerta_id: int,
   return alerta
 
 
-@router.delete("/{alerta_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/alertas/{alerta_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_alerta(alerta_id: int,
                   db: Session = Depends(database.get_db),
                   current_user: Usuario = Depends(get_current_user)):

@@ -5,25 +5,19 @@ from fastapi import status
 from sqlalchemy.orm import Session
 
 from api import database
-from api.dependencies import get_current_user  # Asumiendo que se usa para autorización si es necesario
 from api.models.categoria import Categoria
 from api.schemas.categoria import Categoria as CategoriaSchema
 from api.schemas.categoria import CategoriaCreate
 from api.schemas.categoria import CategoriaUpdate
 
-# En este caso, las categorías podrían ser globales o por usuario, aquí las hago globales.
-# Si fueran por usuario, se debería añadir id_usuario al modelo y esquema de Categoria.
-
 router = APIRouter()
 
 
-@router.post("/",
+@router.post("/categorias",
              response_model=CategoriaSchema,
              status_code=status.HTTP_201_CREATED)
 def create_categoria(categoria_data: CategoriaCreate,
-                     db: Session = Depends(database.get_db)
-                    ):  #, current_user: Usuario = Depends(get_current_user)):
-  # Si fuera por usuario: categoria_data.id_usuario = current_user.id_usuario
+                     db: Session = Depends(database.get_db)):
   nueva_categoria = Categoria(nombre=categoria_data.nombre,
                               tipo=categoria_data.tipo)
   db.add(nueva_categoria)
@@ -32,7 +26,7 @@ def create_categoria(categoria_data: CategoriaCreate,
   return nueva_categoria
 
 
-@router.get("/{categoria_id}", response_model=CategoriaSchema)
+@router.get("/categorias/{categoria_id}", response_model=CategoriaSchema)
 def get_categoria(categoria_id: int, db: Session = Depends(database.get_db)):
   categoria = db.query(Categoria).filter(
       Categoria.id_categoria == categoria_id).first()
@@ -41,7 +35,7 @@ def get_categoria(categoria_id: int, db: Session = Depends(database.get_db)):
   return categoria
 
 
-@router.get("/", response_model=list[CategoriaSchema])
+@router.get("/categorias", response_model=list[CategoriaSchema])
 def get_categorias(skip: int = 0,
                    limit: int = 100,
                    db: Session = Depends(database.get_db)):
@@ -49,7 +43,7 @@ def get_categorias(skip: int = 0,
   return categorias
 
 
-@router.put("/{categoria_id}", response_model=CategoriaSchema)
+@router.put("/categorias/{categoria_id}", response_model=CategoriaSchema)
 def update_categoria(categoria_id: int,
                      categoria_data: CategoriaUpdate,
                      db: Session = Depends(database.get_db)):
@@ -58,7 +52,6 @@ def update_categoria(categoria_id: int,
   if not categoria:
     raise HTTPException(status_code=404, detail="Categoría no encontrada")
 
-  # Actualizar solo los campos proporcionados
   for var, value in categoria_data.model_dump(exclude_unset=True).items():
     setattr(categoria, var, value)
 
@@ -67,7 +60,8 @@ def update_categoria(categoria_id: int,
   return categoria
 
 
-@router.delete("/{categoria_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/categorias/{categoria_id}",
+               status_code=status.HTTP_204_NO_CONTENT)
 def delete_categoria(categoria_id: int, db: Session = Depends(database.get_db)):
   categoria = db.query(Categoria).filter(
       Categoria.id_categoria == categoria_id).first()

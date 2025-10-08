@@ -15,7 +15,8 @@ from api.schemas.perfil import PerfilUsuarioUpdate
 router = APIRouter()
 
 
-@router.post("/",
+# POST /perfiles - Crear perfil para el usuario actual (US1.2)
+@router.post("/perfiles",
              response_model=PerfilUsuarioSchema,
              status_code=status.HTTP_201_CREATED)
 def create_perfil(perfil_data: PerfilUsuarioCreate,
@@ -45,7 +46,8 @@ def create_perfil(perfil_data: PerfilUsuarioCreate,
   return nuevo_perfil
 
 
-@router.get("/", response_model=PerfilUsuarioSchema)
+# GET /perfiles - Obtener perfil del usuario actual
+@router.get("/perfiles", response_model=PerfilUsuarioSchema)
 def get_perfil(db: Session = Depends(database.get_db),
                current_user: Usuario = Depends(get_current_user)):
   perfil = db.query(PerfilUsuario).filter(
@@ -55,7 +57,8 @@ def get_perfil(db: Session = Depends(database.get_db),
   return perfil
 
 
-@router.put("/", response_model=PerfilUsuarioSchema)
+# PUT /perfiles - Actualizar perfil del usuario actual
+@router.put("/perfiles", response_model=PerfilUsuarioSchema)
 def update_perfil(perfil_data: PerfilUsuarioUpdate,
                   db: Session = Depends(database.get_db),
                   current_user: Usuario = Depends(get_current_user)):

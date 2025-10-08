@@ -15,7 +15,7 @@ from api.schemas.transaccion import TransaccionUpdate
 router = APIRouter()
 
 
-@router.post("/",
+@router.post("/transacciones",
              response_model=TransaccionSchema,
              status_code=status.HTTP_201_CREATED)
 def create_transaccion(transaccion_data: TransaccionCreate,
@@ -34,7 +34,7 @@ def create_transaccion(transaccion_data: TransaccionCreate,
   return nueva_transaccion
 
 
-@router.get("/{transaccion_id}", response_model=TransaccionSchema)
+@router.get("/transacciones/{transaccion_id}", response_model=TransaccionSchema)
 def get_transaccion(transaccion_id: int,
                     db: Session = Depends(database.get_db),
                     current_user: Usuario = Depends(get_current_user)):
@@ -47,7 +47,7 @@ def get_transaccion(transaccion_id: int,
   return transaccion
 
 
-@router.get("/", response_model=list[TransaccionSchema])
+@router.get("/transacciones", response_model=list[TransaccionSchema])
 def get_transacciones(skip: int = 0,
                       limit: int = 100,
                       db: Session = Depends(database.get_db),
@@ -58,7 +58,7 @@ def get_transacciones(skip: int = 0,
   return transacciones
 
 
-@router.put("/{transaccion_id}", response_model=TransaccionSchema)
+@router.put("/transacciones/{transaccion_id}", response_model=TransaccionSchema)
 def update_transaccion(transaccion_id: int,
                        transaccion_data: TransaccionUpdate,
                        db: Session = Depends(database.get_db),
@@ -79,7 +79,8 @@ def update_transaccion(transaccion_id: int,
   return transaccion
 
 
-@router.delete("/{transaccion_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/transacciones/{transaccion_id}",
+               status_code=status.HTTP_204_NO_CONTENT)
 def delete_transaccion(transaccion_id: int,
                        db: Session = Depends(database.get_db),
                        current_user: Usuario = Depends(get_current_user)):
