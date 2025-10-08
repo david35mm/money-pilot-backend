@@ -7,6 +7,7 @@ from fastapi import status
 from sqlalchemy.orm import Session
 
 from api import auth
+from api import config
 from api import database
 from api.auth.hashing import hash_password
 from api.auth.hashing import verify_password
@@ -14,7 +15,9 @@ from api.auth.jwt import create_access_token
 from api.auth.verification import generate_verification_code
 from api.auth.verification import send_verification_email
 from api.dependencies import oauth2_scheme  # Importamos oauth2_scheme
+from api.models.perfil import PerfilUsuario
 from api.models.usuario import Usuario
+from api.schemas.perfil import PerfilUsuarioCreate
 from api.schemas.usuario import Usuario as UsuarioSchema
 from api.schemas.usuario import UsuarioCreate
 
@@ -28,18 +31,31 @@ verification_codes = {}
 @router.post("/register",
              response_model=UsuarioSchema,
              status_code=status.HTTP_201_CREATED)
-def register(usuario: UsuarioCreate, db: Session = Depends(database.get_db)):
+def register(usuario_data: UsuarioCreate,
+             db: Session = Depends(database.get_db)):
   # Verificar si el email ya existe
-  db_usuario = db.query(Usuario).filter(Usuario.email == usuario.email).first()
+  db_usuario = db.query(Usuario).filter(
+      Usuario.email == usuario_data.email).first()
   if db_usuario:
     raise HTTPException(status_code=400, detail="El email ya está registrado")
 
   # Crear nuevo usuario
-  hashed_pwd = hash_password(usuario.password)
-  nuevo_usuario = Usuario(email=usuario.email,
+  hashed_pwd = hash_password(usuario_data.password)
+  nuevo_usuario = Usuario(email=usuario_data.email,
                           password_hash=hashed_pwd,
-                          nombre=usuario.nombre)
+                          nombre=usuario_data.nombre)
   db.add(nuevo_usuario)
+  db.flush()  # flush() para obtener el ID sin commitear la transacción
+
+  # Crear perfil vacío para el nuevo usuario (US1.2)
+  perfil_inicial = PerfilUsuario(
+      id_usuario=nuevo_usuario.id_usuario,
+      nombre_completo=nuevo_usuario.
+      nombre  # Opcional: Copiar nombre del usuario
+      # Inicializar otros campos con None o valores por defecto según sea necesario
+  )
+  db.add(perfil_inicial)
+
   db.commit()
   db.refresh(nuevo_usuario)
 
@@ -63,7 +79,7 @@ def login(usuario_data: dict, db: Session = Depends(database.get_db)):
 
   # Crear token de acceso
   access_token_expires = timedelta(
-      minutes=auth.config.settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+      minutes=config.settings.ACCESS_TOKEN_EXPIRE_MINUTES)
   access_token = create_access_token(data={"sub": str(usuario.id_usuario)},
                                      expires_delta=access_token_expires)
 
@@ -83,6 +99,7 @@ def verify_email(usuario_id: int, code: str):
   # db.commit()
 
   # Limpiar el código después de verificarlo
-  del verification_codes[usuario_id]
+  if usuario_id in verification_codes:
+    del verification_codes[usuario_id]
 
   return {"message": "Email verificado exitosamente"}
