@@ -1,0 +1,9 @@
+-r requirements.txt
+basedpyright
+isort
+mypy
+pre-commit
+pylint
+pytest
+pytest-cov
+yapf
