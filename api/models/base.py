@@ -1,5 +1,3 @@
-from sqlalchemy import Column
-from sqlalchemy import Integer
 from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.ext.declarative import declared_attr
 
@@ -11,5 +9,3 @@ class Base:
   def __tablename__(cls):
     # Genera el nombre de la tabla automáticamente a partir del nombre de la clase
     return cls.__name__.lower()
-
-  id = Column(Integer, primary_key=True, index=True)

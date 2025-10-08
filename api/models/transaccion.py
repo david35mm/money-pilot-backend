@@ -1,4 +1,5 @@
 from sqlalchemy import Boolean
+from sqlalchemy import CheckConstraint
 from sqlalchemy import Column
 from sqlalchemy import Date
 from sqlalchemy import ForeignKey
@@ -26,7 +27,9 @@ class Transaccion(Base):
   monto = Column(Numeric(12, 2), nullable=False)
   fecha = Column(Date, nullable=False)
   tipo = Column(String(10),
-                nullable=False)  # 'gasto' o 'ingreso'. CHECK se aplica en la DB
+                CheckConstraint("tipo IN ('gasto', 'ingreso')",
+                                name='check_tipo_transaccion'),
+                nullable=False)  # 'gasto' o 'ingreso'
   es_unico = Column(Boolean, default=False)
   notas = Column(Text, nullable=True)
 

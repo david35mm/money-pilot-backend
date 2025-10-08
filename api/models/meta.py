@@ -1,3 +1,4 @@
+from sqlalchemy import CheckConstraint
 from sqlalchemy import Column
 from sqlalchemy import Date
 from sqlalchemy import ForeignKey
@@ -21,7 +22,11 @@ class Meta(Base):
   monto_objetivo = Column(Numeric(12, 2), nullable=False)
   fecha_objetivo = Column(Date, nullable=False)
   monto_actual = Column(Numeric(12, 2), default=0)
-  estado = Column(String(20), default='en_progreso')  # CHECK se aplica en la DB
+  estado = Column(
+      String(20),
+      CheckConstraint("estado IN ('en_progreso', 'cumplida', 'cancelada')",
+                      name='check_estado_meta'),
+      default='en_progreso')  # 'en_progreso', 'cumplida', 'cancelada'
 
   # Relación
   usuario = relationship("Usuario", back_populates="metas")

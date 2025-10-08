@@ -1,3 +1,4 @@
+from sqlalchemy import CheckConstraint
 from sqlalchemy import Column
 from sqlalchemy import Integer
 from sqlalchemy import String
@@ -11,4 +12,6 @@ class Categoria(Base):
   id_categoria = Column(Integer, primary_key=True, index=True)
   nombre = Column(String(50), nullable=False)
   tipo = Column(String(10),
-                nullable=False)  # 'gasto' o 'ingreso'. CHECK se aplica en la DB
+                CheckConstraint("tipo IN ('gasto', 'ingreso')",
+                                name='check_tipo_categoria'),
+                nullable=False)  # 'gasto' o 'ingreso'
