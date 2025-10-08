@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi.testclient import TestClient
 import pytest
 
@@ -28,7 +30,7 @@ def test_create_and_get_transaccion(client, db_session):
       "id_usuario": new_user.id_usuario,
       "id_categoria": new_categoria.id_categoria,
       "monto": 50000.0,
-      "fecha": "2025-10-08",
+      "fecha": date.fromisoformat("2025-10-08"),
       "tipo": "gasto",
       "notas": "Desayuno en café"
   }
@@ -56,6 +58,8 @@ def test_create_and_get_transaccion(client, db_session):
   assert transaccion_in_db is not None
   assert transaccion_in_db.monto == transaccion_data["monto"]
   assert transaccion_in_db.id_usuario == new_user.id_usuario
+  assert transaccion_in_db.fecha == transaccion_data[
+      "fecha"]  # Verificamos que la fecha se haya guardado correctamente
 
   # Limpiar
   db_session.delete(new_user)  # Borra transacciones y categorias por cascada

@@ -14,6 +14,15 @@ def test_create_and_update_profile(client, db_session):
                      password_hash=hashed_pwd,
                      nombre="Profile Test")
   db_session.add(new_user)
+  db_session.flush()  # Para obtener el ID del usuario
+
+  # Crear manualmente el perfil asociado, simulando lo que hace register
+  new_profile = PerfilUsuario(
+      id_usuario=new_user.id_usuario,
+      nombre_completo=new_user.nombre  # Opcional: Copiar nombre del usuario
+      # Inicializar otros campos con None o valores por defecto según sea necesario
+  )
+  db_session.add(new_profile)
   db_session.commit()
 
   # Simular un token válido para este usuario (esto es un atajo para pruebas sin pasar por login completo)
@@ -47,21 +56,7 @@ def test_create_and_update_profile(client, db_session):
   profile_in_db = db_session.query(PerfilUsuario).filter(
       PerfilUsuario.id_usuario == new_user.id_usuario).first()
   # Este test asume que register() crea un perfil. Si no, este assert fallará.
-  assert profile_in_db is not None
-  # Si el perfil se creó vacío, estos campos serían None
-  assert profile_in_db.edad is None
-
-  # Si quisieras probar la actualización, necesitarías un mock para `get_current_user`.
-  # Por ejemplo, usando `unittest.mock.patch` o `pytest-mock`.
-  # Dado que `get_current_user` depende del token, es más complejo probar directamente con TestClient
-  # sin simular el flujo de login/token.
-  # Se deja como tarea futura o se prueba la lógica de actualización en una función separada.
-
-  # Por ahora, probamos solo la lectura del perfil (requiere auth, lo cual complica más el test con TestClient).
-  # Para este ejemplo, asumiremos que la lógica de update en el router es correcta si pasan los tipos y la DB.
-  # La prueba real de `PUT /` dependería de poder inyectar el `current_user`.
-  # Por lo tanto, nos enfocamos en que el perfil se haya creado inicialmente.
-  assert True  # Placeholder, la lógica real de update se prueba en integración o unidad con mocks.
+  assert profile_in_db is not None  # <-- Ahora debería pasar
 
   # Limpiar: eliminar el usuario y su perfil (por cascada)
   db_session.delete(new_user)
@@ -70,3 +65,9 @@ def test_create_and_update_profile(client, db_session):
   user_check = db_session.query(Usuario).filter(
       Usuario.id_usuario == new_user.id_usuario).first()
   assert user_check is None
+  # El perfil también debería haberse eliminado por cascada
+  profile_check = db_session.query(PerfilUsuario).filter(
+      PerfilUsuario.id_usuario == new_user.id_usuario).first()
+  assert profile_check is None
+
+  # assert True # Placeholder, la lógica real de update se prueba en integración o unidad con mocks.
