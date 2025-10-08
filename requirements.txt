@@ -1,8 +1,10 @@
 fastapi
-passlib[bcrypt]
+httpx
+passlib[argon2]
 psycopg2-binary
 pydantic
 pydantic-settings
+pydantic[email]
 python-jose[cryptography]
 python-multipart
 sqlalchemy
