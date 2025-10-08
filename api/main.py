@@ -1,4 +1,3 @@
-# api/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -52,7 +51,9 @@ app = FastAPI(
 # Configurar CORS (ajusta según sea necesario para producción)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=config.ALLOWED_ORIGINS,  # Debe estar definida en config.py
+
+    # Debe estar definida en config.py
+    allow_origins=config.settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
