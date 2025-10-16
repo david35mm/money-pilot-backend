@@ -1,0 +1,47 @@
+---
+services:
+  db:
+    # No se especifica image, se toma de docker-compose.yml
+    environment:
+      # Sobreescribe los secrets para desarrollo si se usa .env
+      # Si se usan secrets, este override no es necesario para DB en dev
+      # Dejarlo como está en docker-compose.yml base es suficiente para dev con .env
+      # Si decides usar .env para dev en DB también:
+      # POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      # POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      # POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      # Pero esto anula el uso de secrets para dev, lo cual es común.
+      # Manteniendo secrets en base.yml, asegúrate que existan para dev o sobreescribe.
+      # Para simplificar con .env en dev, puedes sobreescribir:
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    # Sobreescribe la configuración de secrets para desarrollo (si se prefiere .env)
+    # environment:
+    #   POSTGRES_DB: ${POSTGRES_DB:-postgres}
+    #   POSTGRES_USER: ${POSTGRES_USER:-postgres}
+    #   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    # secrets: [] # Deshabilita secrets si usas .env
+    ports:
+      - "5432:5432" # Exponer puerto solo en desarrollo
+    # No se redefine volumes para DB aquí, usa el de base.yml
+
+  backend:
+    # Sobreescribe el argumento de build si es necesario para dev
+    build:
+      args:
+        INSTALL_DEV: "true" # Instala requirements-dev.txt
+    environment:
+      # Usar .env para desarrollo
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-postgres}
+      # SECRET_KEY: ${SECRET_KEY:-your-dev-secret-key} # Usar .env o secret
+    ports:
+      - "127.0.0.1:8000:8000" # Exponer puerto solo en desarrollo
+    volumes:
+      - .:/code # Montar código fuente para recarga automática
+      - ./logs:/code/logs   # logs persistentes en el host
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload # --reload solo para dev
+    # secrets: # No se usan secrets aquí en dev, se usa .env
+    #   - jwt_secret
+
+# No se redefine volumes ni secrets aquí, se toman de docker-compose.yml base
