@@ -2,7 +2,7 @@
 services:
   db:
     image: postgres:15-alpine
-    container_name: ludix_postgres
+    container_name: moneypilot_postgres
     restart: always
     # Usará secrets o variables de entorno definidas en override
     environment:
@@ -30,14 +30,14 @@ services:
       # Argumento para instalar dependencias de desarrollo si es necesario
       args:
         INSTALL_DEV: "false" # Cambia a "true" en desarrollo si es necesario
-    container_name: ludix_backend
+    container_name: moneypilot_backend
     restart: always
     depends_on:
       db:
         condition: service_healthy # Requiere healthcheck en db
     # DATABASE_URL se construye usando secrets o variables de entorno
     # Configuración específica de entorno (dev/prod) se hace en override
-    environment:
+    # environment:
       # Estas variables se pueden definir en override o .env
       # DATABASE_URL se construirá usando secrets
       # SECRET_KEY se puede leer de secrets
