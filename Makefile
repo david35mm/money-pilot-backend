@@ -8,7 +8,7 @@ COMPOSE_DEV_FILE := docker-compose.dev.yml
 # COMPOSE_PROD_FILE := docker-compose.prod.yml # Asumiendo que crearás uno separado
 
 # Comando base de docker-compose
-COMPOSE_CMD := docker-compose -p $(COMPOSE_PROJECT_NAME) -f $(COMPOSE_BASE_FILE)
+COMPOSE_CMD := docker compose -p $(COMPOSE_PROJECT_NAME) -f $(COMPOSE_BASE_FILE)
 
 # --- Variables para secrets ---
 # Directorio donde se almacenarán los secrets
