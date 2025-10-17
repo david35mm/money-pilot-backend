@@ -1,0 +1,66 @@
+---
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: moneypilot_postgres
+    restart: always
+    # Usará secrets o variables de entorno definidas en override
+    environment:
+      POSTGRES_DB_FILE: /run/secrets/db_name
+      POSTGRES_USER_FILE: /run/secrets/db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    # NOTA: Puerto NO expuesto aquí. Solo accesible internamente por 'backend'
+    volumes:
+      - ./init-scripts:/docker-entrypoint-initdb.d # Asegúrate que tu script SQL esté aquí
+      - postgres_data:/var/lib/postgresql/data
+    secrets:
+      - db_name
+      - db_user
+      - db_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  backend:
+    build:
+      context: .
+      # Argumento para instalar dependencias de desarrollo si es necesario
+      args:
+        INSTALL_DEV: "false" # Cambia a "true" en desarrollo si es necesario
+    container_name: moneypilot_backend
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy # Requiere healthcheck en db
+    # DATABASE_URL se construye usando secrets o variables de entorno
+    # Configuración específica de entorno (dev/prod) se hace en override
+    # environment:
+      # Estas variables se pueden definir en override o .env
+      # DATABASE_URL se construirá usando secrets
+      # SECRET_KEY se puede leer de secrets
+    # NOTA: Puerto NO expuesto aquí. Se expone detrás de un reverse proxy o en dev override
+    # volumes: # No se monta código aquí para producción
+    # secrets:
+    #   - jwt_secret # Se define en override si se usa secret para SECRET_KEY
+
+volumes:
+  postgres_data:
+
+secrets:
+  jwt_secret:
+    # En producción, esto podría ser un external secret
+    # external: true
+    # name: jwt_secret_name
+    # Para desarrollo local, puedes usar file, pero no en el repo final de prod
+    file: ./secrets/jwt_secret.txt # Mueve o maneja esto con cuidado
+  db_name:
+    file: ./secrets/db_name.txt
+  db_user:
+    file: ./secrets/db_user.txt
+  db_password:
+    file: ./secrets/db_password.txt
+  # db_host y db_port no son necesarios para conexión en red Docker interna
+  # La conexión se hace a 'db' hostname y puerto 5432
