@@ -9,6 +9,8 @@ from api.routers import perfiles
 from api.routers import presupuestos
 from api.routers import transacciones
 from api.routers import usuarios
+from api.routers import auth, usuarios, perfiles, categorias, transacciones, presupuestos, alertas, catalogos # <-- Añadir 'catalogos'
+
 
 # Inicializar la aplicación FastAPI
 app = FastAPI(
@@ -61,7 +63,7 @@ app.add_middleware(
 )
 
 # Incluir los routers
-app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(usuarios.router, prefix="/api/v1", tags=["usuarios"])
 app.include_router(perfiles.router, prefix="/api/v1", tags=["perfiles"])
 app.include_router(categorias.router, prefix="/api/v1", tags=["categorias"])
@@ -70,6 +72,7 @@ app.include_router(transacciones.router,
                    tags=["transacciones"])
 app.include_router(presupuestos.router, prefix="/api/v1", tags=["presupuestos"])
 app.include_router(alertas.router, prefix="/api/v1", tags=["alertas"])
+app.include_router(catalogos.router, prefix="/api/v1", tags=["catalogos"])
 
 
 # Ruta raíz simple
