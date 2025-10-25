@@ -1,16 +1,11 @@
+from api import config
+from api.routers import auth
+from api.routers import catalogos
+from api.routers import financial_health
+from api.routers import perfiles
+from api.routers import usuarios
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
-from api import config
-from api.routers import alertas
-from api.routers import auth
-from api.routers import categorias
-from api.routers import perfiles
-from api.routers import presupuestos
-from api.routers import transacciones
-from api.routers import usuarios
-from api.routers import auth, usuarios, perfiles, categorias, transacciones, presupuestos, alertas, catalogos # <-- Añadir 'catalogos'
-
 
 # Inicializar la aplicación FastAPI
 app = FastAPI(
@@ -33,20 +28,16 @@ app = FastAPI(
             "description": "Operaciones CRUD del perfil detallado del usuario."
         },
         {
-            "name": "categorias",
-            "description": "Operaciones CRUD de categorías de gastos/ingresos."
+            "name":
+                "financial_health",
+            "description":
+                "Endpoints para cálculo y obtención del Financial Health Score."
         },
         {
-            "name": "transacciones",
-            "description": "Operaciones CRUD de transacciones."
-        },
-        {
-            "name": "presupuestos",
-            "description": "Operaciones CRUD de presupuestos."
-        },
-        {
-            "name": "alertas",
-            "description": "Operaciones CRUD de alertas de presupuestos."
+            "name":
+                "catalogos",
+            "description":
+                "Endpoints para obtener listas de valores (categorías, fuentes, países)."
         },
     ])
 
@@ -66,12 +57,9 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(usuarios.router, prefix="/api/v1", tags=["usuarios"])
 app.include_router(perfiles.router, prefix="/api/v1", tags=["perfiles"])
-app.include_router(categorias.router, prefix="/api/v1", tags=["categorias"])
-app.include_router(transacciones.router,
+app.include_router(financial_health.router,
                    prefix="/api/v1",
-                   tags=["transacciones"])
-app.include_router(presupuestos.router, prefix="/api/v1", tags=["presupuestos"])
-app.include_router(alertas.router, prefix="/api/v1", tags=["alertas"])
+                   tags=["financial_health"])
 app.include_router(catalogos.router, prefix="/api/v1", tags=["catalogos"])
 
 
