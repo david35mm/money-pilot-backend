@@ -1,11 +1,5 @@
 from datetime import timedelta
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import status
-from sqlalchemy.orm import Session
-
 from api import auth
 from api import config
 from api import database
@@ -14,12 +8,17 @@ from api.auth.hashing import verify_password
 from api.auth.jwt import create_access_token
 from api.auth.verification import generate_verification_code
 from api.auth.verification import send_verification_email
-from api.dependencies import oauth2_scheme  # Importamos oauth2_scheme
+from api.dependencies import oauth2_scheme
 from api.models.perfil import PerfilUsuario
+# from api.schemas.perfil import PerfilUsuarioCreate # No es necesario importar el esquema completo
 from api.models.usuario import Usuario
-from api.schemas.perfil import PerfilUsuarioCreate
 from api.schemas.usuario import Usuario as UsuarioSchema
 from api.schemas.usuario import UsuarioCreate
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import status
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
@@ -47,12 +46,30 @@ def register(usuario_data: UsuarioCreate,
   db.add(nuevo_usuario)
   db.flush()  # flush() para obtener el ID sin commitear la transacción
 
-  # Crear perfil vacío para el nuevo usuario (US1.2)
+  # Crear perfil vacío/por defecto para el nuevo usuario (US1.2, inicio)
+  # Inicializamos solo los campos obligatorios o con valores por defecto
+  # Los campos clave del nuevo perfil financiero se llenarán posteriormente
   perfil_inicial = PerfilUsuario(
       id_usuario=nuevo_usuario.id_usuario,
-      nombre_completo=nuevo_usuario.
-      nombre  # Opcional: Copiar nombre del usuario
-      # Inicializar otros campos con None o valores por defecto según sea necesario
+      # Campos de informacion_personal (inicialmente vacíos o nulos)
+      nombre=None,  # Se puede dejar vacío o pedirlo en register si es necesario
+      apellido=None,
+      fecha_nacimiento=None,
+      id_pais_residencia=None,  # FK a paises_latam, dejar nula por ahora
+      acepta_terminos=usuario_data.acepta_terminos if hasattr(
+          usuario_data, 'acepta_terminos') else
+      False,  # Asumiendo que UsuarioCreate ahora tiene este campo o se pide después
+      # Campos de datos_financieros.perfil_financiero (inicialmente vacíos o con valores por defecto)
+      ingreso_mensual_estimado=0,
+      gastos_fijos_mensuales=0,
+      gastos_variables_mensuales=0,
+      ahorro_actual=0,
+      deuda_total=0,
+      monto_meta_ahorro=0,
+      plazo_meta_ahorro_meses=0,
+      ahorro_planificado_mensual=0,
+      fuentes_ingreso=[]  # Inicializar como lista vacía
+      # Otros campos del perfil pueden inicializarse como nulos o con valores por defecto
   )
   db.add(perfil_inicial)
 
