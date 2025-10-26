@@ -1,75 +1,62 @@
 from datetime import date
+from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel
-from pydantic import EmailStr
+from pydantic import Field
 
 from .base import BaseSchema
-from .catalogo import PaisLatamBase
 
 
-# --- Esquemas para Crear/Actualizar ---
-class PerfilUsuarioCreate(BaseModel):
-  id_usuario: int
-  nombre: Optional[str] = None
-  apellido: Optional[str] = None
-  fecha_nacimiento: Optional[date] = None
-  id_pais_residencia: Optional[int] = None
-  acepta_terminos: Optional[bool] = False
-
-  ingreso_mensual_estimado: Optional[float] = None
-  gastos_fijos_mensuales: Optional[float] = None
-  gastos_variables_mensuales: Optional[float] = None
-  ahorro_actual: Optional[float] = 0
-  deuda_total: Optional[float] = 0
-  monto_meta_ahorro: Optional[float] = None
-  plazo_meta_ahorro_meses: Optional[int] = None
-  ahorro_planificado_mensual: Optional[float] = None
-  # Opción 1: fuentes_ingreso como lista de strings (IDs o nombres)
-  fuentes_ingreso: Optional[
-      List[str]] = None  # Lista de IDs o nombres de fuentes_ingreso
+class InformacionPersonal(BaseSchema):
+  nombre: str = Field(..., max_length=100)
+  apellido: str = Field(..., max_length=100)
+  fecha_nacimiento: date
+  pais_residencia: str = Field(..., max_length=50)
+  codigo_pais: str = Field(..., min_length=2, max_length=2)
+  acepta_terminos: bool
 
 
-class PerfilUsuarioUpdate(BaseModel):
-  nombre: Optional[str] = None
-  apellido: Optional[str] = None
-  fecha_nacimiento: Optional[date] = None
-  id_pais_residencia: Optional[int] = None
-  acepta_terminos: Optional[bool] = None
-
-  ingreso_mensual_estimado: Optional[float] = None
-  gastos_fijos_mensuales: Optional[float] = None
-  gastos_variables_mensuales: Optional[float] = None
-  ahorro_actual: Optional[float] = None
-  deuda_total: Optional[float] = None
-  monto_meta_ahorro: Optional[float] = None
-  plazo_meta_ahorro_meses: Optional[int] = None
-  ahorro_planificado_mensual: Optional[float] = None
-  fuentes_ingreso: Optional[List[str]] = None
+class MetaAhorro(BaseSchema):
+  monto: float
+  plazo_meses: int
 
 
-# --- Esquema para Lectura (respuesta de la API) ---
-class PerfilUsuario(BaseSchema):
+class PerfilFinanciero(BaseSchema):
+  ingreso_mensual_estimado: float
+  fuentes_ingreso: List[str]
+  gastos_fijos_mensuales: float
+  gastos_variables_mensuales: float
+  ahorro_actual: float
+  deuda_total: float
+  meta_ahorro: MetaAhorro
+  ahorro_planificado_mensual: float
+
+
+class DatosFinancieros(BaseSchema):
+  perfil_financiero: PerfilFinanciero
+
+
+class PerfilCompletoCreate(BaseSchema):
+  informacion_personal: InformacionPersonal
+  datos_financieros: DatosFinancieros
+
+
+class PerfilUsuarioRead(BaseSchema):
   id_perfil: int
   id_usuario: int
-  nombre: Optional[str] = None
-  apellido: Optional[str] = None
-  fecha_nacimiento: Optional[date] = None
-  id_pais_residencia: Optional[int] = None
-  pais_residencia: Optional[PaisLatamBase] = None
-  acepta_terminos: bool
-  ingreso_mensual_estimado: Optional[float] = None
-  gastos_fijos_mensuales: Optional[float] = None
-  gastos_variables_mensuales: Optional[float] = None
-  ahorro_actual: Optional[float] = 0
-  deuda_total: Optional[float] = 0
-  monto_meta_ahorro: Optional[float] = None
-  plazo_meta_ahorro_meses: Optional[int] = None
-  ahorro_planificado_mensual: Optional[float] = None
-  # Opción 1: fuentes_ingreso como lista de strings
-  fuentes_ingreso: Optional[List[str]] = None
-  fecha_creacion: date
-  ultima_actualizacion: date
-
-  class Config:
-    from_attributes = True
+  nombre: Optional[str]
+  apellido: Optional[str]
+  fecha_nacimiento: Optional[date]
+  id_pais_residencia: Optional[int]
+  acepta_terminos: Optional[bool]
+  ingreso_mensual_estimado: Optional[float]
+  gastos_fijos_mensuales: Optional[float]
+  gastos_variables_mensuales: Optional[float]
+  ahorro_actual: Optional[float]
+  deuda_total: Optional[float]
+  monto_meta_ahorro: Optional[float]
+  plazo_meta_ahorro_meses: Optional[int]
+  ahorro_planificado_mensual: Optional[float]
+  fuentes_ingreso: Optional[List[str]]
+  fecha_creacion: datetime
+  ultima_actualizacion: datetime

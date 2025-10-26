@@ -1,8 +1,6 @@
 from pydantic import BaseModel
+from pydantic import ConfigDict
 
 
 class BaseSchema(BaseModel):
-
-  class Config:
-    # Permite que los modelos se puedan crear a partir de objetos ORM de SQLAlchemy
-    from_attributes = True
+  model_config = ConfigDict(from_attributes=True)

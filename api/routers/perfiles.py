@@ -1,109 +1,54 @@
-from api import database
-from api.dependencies import get_current_user
-from api.models.catalogo import PaisLatam
+from api.database import get_db
 from api.models.perfil import PerfilUsuario
 from api.models.usuario import Usuario
-from api.schemas.perfil import PerfilUsuario as PerfilUsuarioSchema
-from api.schemas.perfil import PerfilUsuarioCreate
-from api.schemas.perfil import PerfilUsuarioUpdate
+from api.schemas.perfil import PerfilCompletoCreate
+from api.schemas.perfil import PerfilUsuarioRead
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy.orm import Session
 
-router = APIRouter()
+router = APIRouter(prefix="/perfil_financiero", tags=["Perfiles"])
 
 
-@router.post("/",
-             response_model=PerfilUsuarioSchema,
+@router.post("/{id_usuario}",
+             response_model=PerfilUsuarioRead,
              status_code=status.HTTP_201_CREATED)
-def create_perfil(perfil_data: PerfilUsuarioCreate,
-                  db: Session = Depends(database.get_db),
-                  current_user: Usuario = Depends(get_current_user)):
-  # Verificar si ya existe un perfil para este usuario
-  existing_profile = db.query(PerfilUsuario).filter(
-      PerfilUsuario.id_usuario == current_user.id_usuario).first()
-  if existing_profile:
-    raise HTTPException(
-        status_code=400,
-        detail=
-        "El perfil para este usuario ya existe. Use PUT para actualizarlo.")
+def crear_perfil_financiero(id_usuario: int,
+                            data: PerfilCompletoCreate,
+                            db: Session = Depends(get_db)):
+  user = db.query(Usuario).filter(Usuario.id_usuario == id_usuario).first()
+  if not user:
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Usuario no encontrado.")
 
-  # Verificar que el ID del usuario en el payload coincida con el del token
-  if perfil_data.id_usuario != current_user.id_usuario:
-    raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail="No autorizado para crear perfil para otro usuario.")
+  personal = data.informacion_personal
+  financiero = data.datos_financieros.perfil_financiero
 
-  # Opcional: Validar id_pais_residencia si se proporciona
-  if perfil_data.id_pais_residencia:
-    pais_existente = db.query(PaisLatam).filter(
-        PaisLatam.id_pais == perfil_data.id_pais_residencia).first()
-    if not pais_existente:
-      raise HTTPException(
-          status_code=400,
-          detail=f"El país con id {perfil_data.id_pais_residencia} no existe.")
+  pais = db.execute("SELECT id_pais FROM paises_latam WHERE codigo = :codigo", {
+      "codigo": personal.codigo_pais
+  }).fetchone()
+  id_pais = pais[0] if pais else None
 
-  # Crear nuevo perfil
-  nuevo_perfil = PerfilUsuario(**perfil_data.model_dump())
-  db.add(nuevo_perfil)
-  db.commit()
-  db.refresh(nuevo_perfil)
+  perfil = PerfilUsuario(
+      id_usuario=id_usuario,
+      nombre=personal.nombre,
+      apellido=personal.apellido,
+      fecha_nacimiento=personal.fecha_nacimiento,
+      id_pais_residencia=id_pais,
+      acepta_terminos=personal.acepta_terminos,
+      ingreso_mensual_estimado=financiero.ingreso_mensual_estimado,
+      gastos_fijos_mensuales=financiero.gastos_fijos_mensuales,
+      gastos_variables_mensuales=financiero.gastos_variables_mensuales,
+      ahorro_actual=financiero.ahorro_actual,
+      deuda_total=financiero.deuda_total,
+      monto_meta_ahorro=financiero.meta_ahorro.monto,
+      plazo_meta_ahorro_meses=financiero.meta_ahorro.plazo_meses,
+      ahorro_planificado_mensual=financiero.ahorro_planificado_mensual,
+      fuentes_ingreso=financiero.fuentes_ingreso)
 
-  # Opcional: Cargar la relación pais_residencia para devolverla en la respuesta
-  # db.refresh(nuevo_perfil, attribute_names=['pais_residencia_obj'])
-  # if nuevo_perfil.pais_residencia_obj:
-  #     # Asignar el objeto país al esquema antes de devolverlo
-  #     # Esto requiere manejo especial en Pydantic si se quiere incluir aquí
-  #     # Una forma es usar `@property` en el modelo o manejarlo en el esquema de salida
-  #     pass
-
-  return nuevo_perfil
-
-
-@router.get("/", response_model=PerfilUsuarioSchema)
-def get_perfil(db: Session = Depends(database.get_db),
-               current_user: Usuario = Depends(get_current_user)):
-  perfil = db.query(PerfilUsuario).filter(
-      PerfilUsuario.id_usuario == current_user.id_usuario).first()
-  if not perfil:
-    raise HTTPException(status_code=404, detail="Perfil no encontrado")
-  # Opcional: Cargar la relación pais_residencia para devolverla en la respuesta
-  # db.refresh(perfil, attribute_names=['pais_residencia_obj'])
-  # if perfil.pais_residencia_obj:
-  #     # Similar al create, manejar la inclusión del objeto país
-  #     pass
-  return perfil
-
-
-@router.put("/", response_model=PerfilUsuarioSchema)
-def update_perfil(perfil_data: PerfilUsuarioUpdate,
-                  db: Session = Depends(database.get_db),
-                  current_user: Usuario = Depends(get_current_user)):
-  perfil = db.query(PerfilUsuario).filter(
-      PerfilUsuario.id_usuario == current_user.id_usuario).first()
-  if not perfil:
-    raise HTTPException(status_code=404, detail="Perfil no encontrado")
-
-  # Opcional: Validar id_pais_residencia si se proporciona en la actualización
-  if perfil_data.id_pais_residencia:
-    pais_existente = db.query(PaisLatam).filter(
-        PaisLatam.id_pais == perfil_data.id_pais_residencia).first()
-    if not pais_existente:
-      raise HTTPException(
-          status_code=400,
-          detail=f"El país con id {perfil_data.id_pais_residencia} no existe.")
-
-  # Actualizar solo los campos proporcionados
-  for var, value in perfil_data.model_dump(exclude_unset=True).items():
-    setattr(perfil, var, value)
-
+  db.add(perfil)
   db.commit()
   db.refresh(perfil)
-  # Opcional: Cargar la relación pais_residencia para devolverla en la respuesta
-  # db.refresh(perfil, attribute_names=['pais_residencia_obj'])
   return perfil
-
-
-# No se incluye DELETE para el perfil, ya que generalmente no se borra, solo se actualiza o se desactiva el usuario.

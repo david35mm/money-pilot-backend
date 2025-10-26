@@ -1,28 +1,17 @@
 from datetime import datetime
 
-from pydantic import BaseModel
 from pydantic import EmailStr
+from pydantic import Field
 
 from .base import BaseSchema
 
 
-# --- Esquemas para Crear/Actualizar ---
-class UsuarioCreate(BaseModel):
-  email: EmailStr
-  password: str
-  nombre: str
+class UsuarioCreate(BaseSchema):
+  email: EmailStr = Field(..., max_length=100)
+  password: str = Field(..., min_length=6, max_length=255)
 
 
-class UsuarioUpdate(BaseModel):
-  nombre: str | None = None
-
-
-# --- Esquema para Lectura (respuesta de la API) ---
-class Usuario(BaseSchema):
+class UsuarioRead(BaseSchema):
   id_usuario: int
   email: EmailStr
-  nombre: str
   created_at: datetime
-
-  class Config:
-    from_attributes = True
