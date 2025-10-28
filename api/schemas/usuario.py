@@ -1,9 +1,8 @@
 from datetime import datetime
 
+from api.schemas.base import BaseSchema
 from pydantic import EmailStr
 from pydantic import Field
-
-from .base import BaseSchema
 
 
 class UsuarioCreate(BaseSchema):
