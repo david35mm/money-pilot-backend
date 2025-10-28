@@ -25,7 +25,8 @@ class PerfilUsuario(Base):
   nombre = Column(String(100))
   apellido = Column(String(100))
   fecha_nacimiento = Column(Date)
-  id_pais_residencia = Column(Integer, ForeignKey("paises_latam.id_pais"))
+  # id_pais_residencia = Column(Integer, ForeignKey("paises_latam.id_pais"))
+  id_pais_residencia = Column(Integer, nullable=False)
   acepta_terminos = Column(Boolean, default=False)
 
   ingreso_mensual_estimado = Column(Numeric(12, 2))
@@ -44,4 +45,4 @@ class PerfilUsuario(Base):
                                 onupdate=func.now())
 
   usuario = relationship("Usuario", back_populates="perfil")
-  pais = relationship("PaisLatam", lazy="joined")
+  # pais = relationship("PaisLatam", lazy="joined")

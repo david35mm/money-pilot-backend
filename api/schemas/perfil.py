@@ -2,9 +2,17 @@ from datetime import date
 from datetime import datetime
 from typing import List, Optional
 
+from api.schemas.base import BaseSchema
+from pydantic import BaseModel
 from pydantic import Field
 
-from .base import BaseSchema
+
+class PerfilPersonalCreate(BaseModel):
+  nombre: str
+  apellido: str
+  fecha_nacimiento: date
+  codigo_pais: str
+  acepta_terminos: bool
 
 
 class InformacionPersonal(BaseSchema):
