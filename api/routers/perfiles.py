@@ -1,4 +1,4 @@
-from api.config import settings
+from api.auth.token import get_user_id_from_token
 from api.database import get_db
 from api.models.perfil import PerfilUsuario
 from api.models.usuario import Usuario
@@ -7,29 +7,12 @@ from api.schemas.perfil import PerfilPersonalCreate
 from api.schemas.perfil import PerfilUsuarioRead
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import Header
 from fastapi import HTTPException
 from fastapi import status
-from jose import jwt
-from jose import JWTError
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/perfil_personal", tags=["Perfiles"])
-
-
-def get_user_id_from_token(authorization: str = Header(None)) -> int | None:
-  """Extrae el id_usuario del token JWT si está presente en el header Authorization."""
-  if not authorization or not authorization.startswith("Bearer "):
-    return None
-  token = authorization.split(" ")[1]
-  try:
-    payload = jwt.decode(token,
-                         settings.SECRET_KEY,
-                         algorithms=[settings.ALGORITHM])
-    return payload.get("sub")
-  except JWTError:
-    return None
 
 
 @router.post("/",

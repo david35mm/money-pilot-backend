@@ -4,15 +4,12 @@ from datetime import timezone
 from typing import Optional
 
 from api import config
-from api.database import get_db
-from api.models.usuario import Usuario
-from fastapi import Depends
+from fastapi import Header
 from fastapi import HTTPException
 from fastapi import status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from jose import JWTError
-from sqlalchemy.orm import Session
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
@@ -48,12 +45,15 @@ def verify_access_token(token: str):
                         detail="Token inválido o expirado.")
 
 
-def get_current_user(token: str = Depends(oauth2_scheme),
-                     db: Session = Depends(get_db)) -> Usuario:
-  """Obtiene el usuario actual a partir del token JWT."""
-  user_id = verify_access_token(token)
-  user = db.query(Usuario).filter(Usuario.id_usuario == user_id).first()
-  if not user:
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                        detail="Usuario no encontrado.")
-  return user
+def get_user_id_from_token(authorization: str = Header(None)) -> int | None:
+  """Extracts user ID from Authorization header if valid JWT is present."""
+  if not authorization or not authorization.startswith("Bearer "):
+    return None
+  token = authorization.split(" ")[1]
+  try:
+    payload = jwt.decode(token,
+                         config.settings.SECRET_KEY,
+                         algorithms=[config.settings.ALGORITHM])
+    return payload.get("sub")
+  except JWTError:
+    return None
