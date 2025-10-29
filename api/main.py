@@ -1,12 +1,31 @@
-from api import config
 from api.routers import auth
 from api.routers import eventos_financieros
 from api.routers import perfiles
 from api.routers import usuarios
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
 
 app = FastAPI(title="MoneyPilot API", version="1.0.0")
+
+
+class ForwardedProtoMiddleware(BaseHTTPMiddleware):
+  """
+    Ensures FastAPI respects the original protocol (https/http)
+    when behind a reverse proxy (e.g., Nginx, Traefik, etc.)
+    """
+
+  async def dispatch(self, request: Request, call_next):
+    forwarded_proto = request.headers.get("x-forwarded-proto")
+    if forwarded_proto:
+      scope = request.scope
+      scope["scheme"] = forwarded_proto
+    response = await call_next(request)
+    return response
+
+
+app.add_middleware(ForwardedProtoMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
