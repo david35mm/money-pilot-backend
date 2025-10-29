@@ -1,5 +1,6 @@
 from api import config
 from api.routers import auth
+from api.routers import eventos_financieros
 from api.routers import perfiles
 from api.routers import usuarios
 from fastapi import FastAPI
@@ -19,6 +20,7 @@ app.add_middleware(
 app.include_router(usuarios.router)
 app.include_router(perfiles.router)
 app.include_router(auth.router)
+app.include_router(eventos_financieros.router)
 
 
 @app.get("/", tags=["Root"])

@@ -63,19 +63,18 @@ EXECUTE FUNCTION actualizar_ultima_actualizacion();
 CREATE TABLE public.eventos_financieros (
   id_evento SERIAL PRIMARY KEY,
   id_usuario INTEGER NOT NULL REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
-  tipo VARCHAR(10) NOT NULL CHECK (tipo IN ('ingreso', 'gasto')),
+  tipo VARCHAR(10) NOT NULL CHECK (tipo IN ('INGRESO', 'GASTO')),
   id_categoria_gasto INTEGER REFERENCES categorias_gastos(id_categoria_gasto) ON DELETE SET NULL,
   id_categoria_ingreso INTEGER REFERENCES categorias_ingresos(id_categoria_ingreso) ON DELETE SET NULL,
-  id_fuente_ingreso INTEGER REFERENCES fuentes_ingreso(id_fuente_ingreso) ON DELETE SET NULL,
   monto NUMERIC(12,2) NOT NULL,
   fecha DATE NOT NULL,
   descripcion TEXT,
-  es_unico BOOLEAN DEFAULT FALSE,
+  es_unico BOOLEAN DEFAULT TRUE,
   semana_inicio DATE,
   fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT chk_categoria_tipo CHECK (
-    (tipo = 'gasto' AND id_categoria_gasto IS NOT NULL AND id_categoria_ingreso IS NULL) OR
-    (tipo = 'ingreso' AND id_categoria_ingreso IS NOT NULL AND id_categoria_gasto IS NULL)
+    (tipo = 'GASTO' AND id_categoria_gasto IS NOT NULL AND id_categoria_ingreso IS NULL) OR
+    (tipo = 'INGRESO' AND id_categoria_ingreso IS NOT NULL AND id_categoria_gasto IS NULL)
   )
 );
 
