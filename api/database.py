@@ -1,35 +1,25 @@
-import re
-
 from api import config
-from sqlalchemy.ext.asyncio import async_sessionmaker
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import sessionmaker
 
-
-def ensure_async_driver(db_url: str) -> str:
-  """
-    Ensures the database URL uses the asyncpg driver for async operations
-    while keeping the original clean URL format in environment variables.
-    """
-  if db_url.startswith("postgresql://"):
-    # Replace with postgresql+asyncpg:// for async operations
-    return db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-  return db_url
-
-
-engine = create_async_engine(
-    ensure_async_driver(config.settings.DATABASE_URL),
+# Crear el engine de SQLAlchemy
+engine = create_engine(
+    config.settings.DATABASE_URL,
     # echo=True # Descomentar para ver queries SQL en consola (útil para debugging)
 )
 
-AsyncSessionLocal = async_sessionmaker(engine,
-                                       class_=AsyncSession,
-                                       expire_on_commit=False)
+# Crear una clase de sesión local
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Instancia base para crear modelos
+Base = declarative_base()
 
 
-async def get_db():
-  async with AsyncSessionLocal() as session:
-    try:
-      yield session
-    finally:
-      await session.close()
+# Dependencia FastAPI para obtener la sesión de DB
+def get_db():
+  db = SessionLocal()
+  try:
+    yield db
+  finally:
+    db.close()
