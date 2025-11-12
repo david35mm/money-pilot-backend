@@ -3,7 +3,9 @@ from api.database import get_db
 from api.models.perfil import PerfilUsuario
 from api.models.usuario import Usuario
 from api.schemas.perfil import PerfilFinancieroCreate
+from api.schemas.perfil import PerfilFinancieroRead
 from api.schemas.perfil import PerfilPersonalCreate
+from api.schemas.perfil import PerfilPersonalRead
 from api.schemas.perfil import PerfilUsuarioRead
 from fastapi import APIRouter
 from fastapi import Depends
@@ -66,7 +68,9 @@ def crear_perfil_personal(data: PerfilPersonalCreate,
   return perfil
 
 
-@router.get("/", response_model=dict, status_code=status.HTTP_200_OK)
+@router.get("/",
+            response_model=PerfilPersonalRead,
+            status_code=status.HTTP_200_OK)
 def obtener_perfil_personal(
     db: Session = Depends(get_db),
     token_user_id: int | None = Depends(get_user_id_from_token),
@@ -96,12 +100,10 @@ def obtener_perfil_personal(
           "id_pais": perfil.id_pais_residencia
       }).fetchone()
 
-  return {
-      "nombre": perfil.nombre,
-      "apellido": perfil.apellido,
-      "fecha_nacimiento": perfil.fecha_nacimiento,
-      "pais_residencia": pais[0] if pais else None
-  }
+  return PerfilPersonalRead(nombre=perfil.nombre,
+                            apellido=perfil.apellido,
+                            fecha_nacimiento=perfil.fecha_nacimiento,
+                            pais_residencia=pais[0] if pais else None)
 
 
 @router.post("/financiero",
@@ -146,7 +148,9 @@ def crear_o_actualizar_perfil_financiero(data: PerfilFinancieroCreate,
   return perfil
 
 
-@router.get("/financiero", response_model=dict, status_code=status.HTTP_200_OK)
+@router.get("/financiero",
+            response_model=PerfilFinancieroRead,
+            status_code=status.HTTP_200_OK)
 def obtener_perfil_financiero(
     db: Session = Depends(get_db),
     token_user_id: int | None = Depends(get_user_id_from_token),
@@ -169,14 +173,14 @@ def obtener_perfil_financiero(
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                         detail="Perfil financiero no encontrado.")
 
-  return {
-      "ingreso_mensual_estimado": perfil.ingreso_mensual_estimado,
-      "fuentes_ingreso": perfil.fuentes_ingreso,
-      "gastos_fijos_mensuales": perfil.gastos_fijos_mensuales,
-      "gastos_variables_mensuales": perfil.gastos_variables_mensuales,
-      "ahorro_actual": perfil.ahorro_actual,
-      "deuda_total": perfil.deuda_total,
-      "monto_meta_ahorro": perfil.monto_meta_ahorro,
-      "plazo_meta_ahorro_meses": perfil.plazo_meta_ahorro_meses,
-      "ahorro_planificado_mensual": perfil.ahorro_planificado_mensual,
-  }
+  return PerfilFinancieroRead(
+      ingreso_mensual_estimado=perfil.ingreso_mensual_estimado,
+      fuentes_ingreso=perfil.fuentes_ingreso,
+      gastos_fijos_mensuales=perfil.gastos_fijos_mensuales,
+      gastos_variables_mensuales=perfil.gastos_variables_mensuales,
+      ahorro_actual=perfil.ahorro_actual,
+      deuda_total=perfil.deuda_total,
+      monto_meta_ahorro=perfil.monto_meta_ahorro,
+      plazo_meta_ahorro_meses=perfil.plazo_meta_ahorro_meses,
+      ahorro_planificado_mensual=perfil.ahorro_planificado_mensual,
+  )

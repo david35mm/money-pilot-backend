@@ -4,6 +4,7 @@ from typing import List, Optional
 
 from api.schemas.base import BaseSchema
 from pydantic import BaseModel
+from pydantic import ConfigDict
 
 
 class PerfilUsuarioRead(BaseSchema):
@@ -50,5 +51,27 @@ class PerfilFinancieroCreate(BaseModel):
   meta_ahorro: MetaAhorro
   ahorro_planificado_mensual: float
 
-  class Config:
-    orm_mode = True
+  model_config = ConfigDict(from_attributes=True)
+
+
+class PerfilPersonalRead(BaseModel):
+  nombre: Optional[str]
+  apellido: Optional[str]
+  fecha_nacimiento: Optional[date]
+  pais_residencia: Optional[str]
+
+  model_config = ConfigDict(from_attributes=True)
+
+
+class PerfilFinancieroRead(BaseModel):
+  ingreso_mensual_estimado: Optional[float]
+  fuentes_ingreso: Optional[List[str]]
+  gastos_fijos_mensuales: Optional[float]
+  gastos_variables_mensuales: Optional[float]
+  ahorro_actual: Optional[float]
+  deuda_total: Optional[float]
+  monto_meta_ahorro: Optional[float]
+  plazo_meta_ahorro_meses: Optional[int]
+  ahorro_planificado_mensual: Optional[float]
+
+  model_config = ConfigDict(from_attributes=True)

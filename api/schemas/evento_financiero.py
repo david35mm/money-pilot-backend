@@ -2,6 +2,7 @@ from datetime import date
 from typing import List, Optional
 
 from pydantic import BaseModel
+from pydantic import ConfigDict
 
 
 class EventoFinancieroCreate(BaseModel):
@@ -38,8 +39,7 @@ class EventoFinancieroDBRead(BaseModel):
   es_unico: bool
   semana_inicio: Optional[date]
 
-  class Config:
-    from_attributes = True
+  model_config = ConfigDict(from_attributes=True)
 
 
 class EventoFinancieroListRead(BaseModel):
@@ -52,8 +52,7 @@ class EventoFinancieroListRead(BaseModel):
   semana_inicio: Optional[date]
   categoria: Optional[str]
 
-  class Config:
-    orm_mode = True
+  model_config = ConfigDict(from_attributes=True)
 
 
 class EventosFinancierosResponse(BaseModel):
