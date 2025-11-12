@@ -1,26 +1,21 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import sessionmaker
-
 from api import config
+from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine
 
-# Crear el engine de SQLAlchemy
-engine = create_engine(
+engine = create_async_engine(
     config.settings.DATABASE_URL,
     # echo=True # Descomentar para ver queries SQL en consola (útil para debugging)
 )
 
-# Crear una clase de sesión local
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Instancia base para crear modelos
-Base = declarative_base()
+AsyncSessionLocal = async_sessionmaker(engine,
+                                       class_=AsyncSession,
+                                       expire_on_commit=False)
 
 
-# Dependencia FastAPI para obtener la sesión de DB
-def get_db():
-  db = SessionLocal()
-  try:
-    yield db
-  finally:
-    db.close()
+async def get_db():
+  async with AsyncSessionLocal() as session:
+    try:
+      yield session
+    finally:
+      await session.close()

@@ -1,9 +1,11 @@
+from api import config
 from api.routers import auth
 from api.routers import eventos_financieros
 from api.routers import perfiles
 from api.routers import usuarios
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
@@ -27,10 +29,13 @@ class ForwardedProtoMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(ForwardedProtoMiddleware)
 
+# Conditional HTTPS redirect middleware for production
+if config.settings.ENV == "production":
+  app.add_middleware(HTTPSRedirectMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
-    # allow_origins=config.settings.ALLOWED_ORIGINS,
-    allow_origins=["*"],  # Reemplazar con dominio del frontend en producción
+    allow_origins=config.settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
