@@ -35,7 +35,7 @@ if config.settings.ENV == "production":
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=config.settings.ALLOWED_ORIGINS,
+    allow_origins=config.settings.allowed_origins_list(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
