@@ -1,18 +1,19 @@
 from api.models.base import Base
-from sqlalchemy import Column
-from sqlalchemy import Integer
 from sqlalchemy import String
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
 
 
 class CategoriaGasto(Base):
   __tablename__ = "categorias_gastos"
 
-  id_categoria_gasto = Column(Integer, primary_key=True, index=True)
-  nombre = Column(String(50), unique=True, nullable=False)
+  id_categoria_gasto: Mapped[int] = mapped_column(primary_key=True, index=True)
+  nombre: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
 
 
 class CategoriaIngreso(Base):
   __tablename__ = "categorias_ingresos"
 
-  id_categoria_ingreso = Column(Integer, primary_key=True, index=True)
-  nombre = Column(String(50), unique=True, nullable=False)
+  id_categoria_ingreso: Mapped[int] = mapped_column(primary_key=True,
+                                                    index=True)
+  nombre: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)

@@ -1,11 +1,14 @@
-import importlib
-from pathlib import Path
-import pkgutil
+from .base import Base
+from .categorias import CategoriaGasto
+from .categorias import CategoriaIngreso
+from .evento_financiero import EventoFinanciero
+from .perfil import PerfilUsuario
+from .usuario import Usuario
 
-from api.models.base import Base
+# Note: PaisLatam and FuenteIngreso are referenced in requirements but not currently implemented
+# They would be imported here when created
 
-# Auto-import every .py file inside this package (except __init__.py)
-package_dir = Path(__file__).resolve().parent
-for _, module_name, _ in pkgutil.iter_modules([str(package_dir)]):
-  if module_name not in {"__init__", "base"}:
-    importlib.import_module(f"api.models.{module_name}")
+__all__ = [
+    "Base", "Usuario", "PerfilUsuario", "CategoriaGasto", "CategoriaIngreso",
+    "EventoFinanciero"
+]
