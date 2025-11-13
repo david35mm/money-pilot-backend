@@ -1,6 +1,7 @@
 from api import config
 from api.routers import auth
 from api.routers import eventos_financieros
+from api.routers import financial_health
 from api.routers import perfiles
 from api.routers import usuarios
 from fastapi import FastAPI
@@ -45,6 +46,7 @@ app.include_router(usuarios.router)
 app.include_router(perfiles.router)
 app.include_router(auth.router)
 app.include_router(eventos_financieros.router)
+app.include_router(financial_health.router)
 
 
 @app.get("/", tags=["Root"])
