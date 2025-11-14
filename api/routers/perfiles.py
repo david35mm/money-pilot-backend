@@ -26,7 +26,7 @@ def crear_perfil_personal(data: PerfilPersonalCreate,
                           token_user_id: int |
                           None = Depends(get_user_id_from_token),
                           id_usuario: int | None = None):
-  """Crea o actualiza la información personal básica del usuario.
+  """Crea la información personal básica del usuario.
     Si no se proporciona id_usuario, se toma del token JWT.
     """
 
@@ -43,26 +43,69 @@ def crear_perfil_personal(data: PerfilPersonalCreate,
   perfil = db.query(PerfilUsuario).filter(
       PerfilUsuario.id_usuario == user_id).first()
 
+  if perfil:
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Perfil ya existe. Use PUT para actualizar.")
+
   pais = db.execute(
       text("SELECT id_pais FROM paises_latam WHERE codigo = :codigo"), {
           "codigo": data.codigo_pais
       }).fetchone()
   id_pais = pais[0] if pais else None
 
-  if perfil:
-    perfil.nombre = data.nombre
-    perfil.apellido = data.apellido
-    perfil.fecha_nacimiento = data.fecha_nacimiento
-    perfil.id_pais_residencia = id_pais
-    perfil.acepta_terminos = data.acepta_terminos
-  else:
-    perfil = PerfilUsuario(id_usuario=user_id,
-                           nombre=data.nombre,
-                           apellido=data.apellido,
-                           fecha_nacimiento=data.fecha_nacimiento,
-                           id_pais_residencia=id_pais,
-                           acepta_terminos=data.acepta_terminos)
-    db.add(perfil)
+  perfil = PerfilUsuario(id_usuario=user_id,
+                         nombre=data.nombre,
+                         apellido=data.apellido,
+                         fecha_nacimiento=data.fecha_nacimiento,
+                         id_pais_residencia=id_pais,
+                         acepta_terminos=data.acepta_terminos)
+  db.add(perfil)
+
+  db.commit()
+  db.refresh(perfil)
+  return perfil
+
+
+@router.put("/",
+            response_model=PerfilUsuarioRead,
+            status_code=status.HTTP_200_OK)
+def actualizar_perfil_personal(data: PerfilPersonalCreate,
+                               db: Session = Depends(get_db),
+                               token_user_id: int |
+                               None = Depends(get_user_id_from_token),
+                               id_usuario: int | None = None):
+  """Actualiza la información personal básica del usuario.
+    Si no se proporciona id_usuario, se toma del token JWT.
+    """
+
+  user_id = id_usuario or token_user_id
+  if not user_id:
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="No autorizado o token inválido.")
+
+  user = db.query(Usuario).filter(Usuario.id_usuario == user_id).first()
+  if not user:
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Usuario no encontrado.")
+
+  perfil = db.query(PerfilUsuario).filter(
+      PerfilUsuario.id_usuario == user_id).first()
+
+  if not perfil:
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Perfil no encontrado.")
+
+  pais = db.execute(
+      text("SELECT id_pais FROM paises_latam WHERE codigo = :codigo"), {
+          "codigo": data.codigo_pais
+      }).fetchone()
+  id_pais = pais[0] if pais else None
+
+  perfil.nombre = data.nombre
+  perfil.apellido = data.apellido
+  perfil.fecha_nacimiento = data.fecha_nacimiento
+  perfil.id_pais_residencia = id_pais
+  perfil.acepta_terminos = data.acepta_terminos
 
   db.commit()
   db.refresh(perfil)
@@ -110,12 +153,14 @@ def obtener_perfil_personal(
 @router.post("/financiero",
              response_model=PerfilUsuarioRead,
              status_code=status.HTTP_201_CREATED)
-def crear_o_actualizar_perfil_financiero(data: PerfilFinancieroCreate,
-                                         db: Session = Depends(get_db),
-                                         token_user_id: int |
-                                         None = Depends(get_user_id_from_token),
-                                         id_usuario: int | None = None):
-  """Crea o actualiza la información financiera del usuario."""
+def crear_perfil_financiero(data: PerfilFinancieroCreate,
+                            db: Session = Depends(get_db),
+                            token_user_id: int |
+                            None = Depends(get_user_id_from_token),
+                            id_usuario: int | None = None):
+  """Crea la información financiera del usuario.
+    Si no se proporciona id_usuario, se toma del token JWT.
+    """
 
   user_id = id_usuario or token_user_id
   if not user_id:
@@ -133,6 +178,65 @@ def crear_o_actualizar_perfil_financiero(data: PerfilFinancieroCreate,
   if not perfil:
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                         detail="Debe crear primero el perfil personal.")
+
+  # Check if financial profile already exists
+  if perfil.ingreso_mensual_estimado is not None:
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Perfil financiero ya existe. Use PUT para actualizar.")
+
+  # Validate fuentes_ingreso against the fuentes_ingreso table
+  if data.fuentes_ingreso:
+    for fuente in data.fuentes_ingreso:
+      fuente_ingreso = db.query(FuenteIngreso).filter(
+          FuenteIngreso.nombre == fuente).first()
+      if not fuente_ingreso:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f"Fuente de ingreso no válida: {fuente}")
+
+  perfil.ingreso_mensual_estimado = data.ingreso_mensual_estimado
+  perfil.fuentes_ingreso = data.fuentes_ingreso
+  perfil.gastos_fijos_mensuales = data.gastos_fijos_mensuales
+  perfil.gastos_variables_mensuales = data.gastos_variables_mensuales
+  perfil.ahorro_actual = data.ahorro_actual
+  perfil.deuda_total = data.deuda_total
+  perfil.monto_meta_ahorro = data.meta_ahorro.monto
+  perfil.plazo_meta_ahorro_meses = data.meta_ahorro.plazo_meses
+  perfil.ahorro_planificado_mensual = data.ahorro_planificado_mensual
+
+  db.commit()
+  db.refresh(perfil)
+  return perfil
+
+
+@router.put("/financiero",
+            response_model=PerfilUsuarioRead,
+            status_code=status.HTTP_200_OK)
+def actualizar_perfil_financiero(data: PerfilFinancieroCreate,
+                                 db: Session = Depends(get_db),
+                                 token_user_id: int |
+                                 None = Depends(get_user_id_from_token),
+                                 id_usuario: int | None = None):
+  """Actualiza la información financiera del usuario.
+    Si no se proporciona id_usuario, se toma del token JWT.
+    """
+
+  user_id = id_usuario or token_user_id
+  if not user_id:
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="No autorizado o token inválido.")
+
+  user = db.query(Usuario).filter(Usuario.id_usuario == user_id).first()
+  if not user:
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Usuario no encontrado.")
+
+  perfil = db.query(PerfilUsuario).filter(
+      PerfilUsuario.id_usuario == user_id).first()
+
+  if not perfil:
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Perfil no encontrado.")
 
   # Validate fuentes_ingreso against the fuentes_ingreso table
   if data.fuentes_ingreso:
