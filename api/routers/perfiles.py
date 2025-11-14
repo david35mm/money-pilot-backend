@@ -1,5 +1,6 @@
 from api.auth.token import get_user_id_from_token
 from api.database import get_db
+from api.models.fuentes_ingreso import FuenteIngreso
 from api.models.perfil import PerfilUsuario
 from api.models.usuario import Usuario
 from api.schemas.perfil import PerfilFinancieroCreate
@@ -132,6 +133,15 @@ def crear_o_actualizar_perfil_financiero(data: PerfilFinancieroCreate,
   if not perfil:
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                         detail="Debe crear primero el perfil personal.")
+
+  # Validate fuentes_ingreso against the fuentes_ingreso table
+  if data.fuentes_ingreso:
+    for fuente in data.fuentes_ingreso:
+      fuente_ingreso = db.query(FuenteIngreso).filter(
+          FuenteIngreso.nombre == fuente).first()
+      if not fuente_ingreso:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f"Fuente de ingreso no válida: {fuente}")
 
   perfil.ingreso_mensual_estimado = data.ingreso_mensual_estimado
   perfil.fuentes_ingreso = data.fuentes_ingreso

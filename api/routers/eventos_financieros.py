@@ -57,6 +57,12 @@ def crear_evento_financiero(
       raise HTTPException(
           status_code=status.HTTP_400_BAD_REQUEST,
           detail="Debe proporcionar id_categoria_gasto para un gasto.")
+    # Validate category exists
+    categoria_gasto = db.query(CategoriaGasto).filter(
+        CategoriaGasto.id_categoria_gasto == data.id_categoria_gasto).first()
+    if not categoria_gasto:
+      raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                          detail="Categoría de gasto no válida")
     id_categoria_gasto = data.id_categoria_gasto
     id_categoria_ingreso = None
   else:
@@ -64,6 +70,13 @@ def crear_evento_financiero(
       raise HTTPException(
           status_code=status.HTTP_400_BAD_REQUEST,
           detail="Debe proporcionar id_categoria_ingreso para un ingreso.")
+    # Validate category exists
+    categoria_ingreso = db.query(CategoriaIngreso).filter(
+        CategoriaIngreso.id_categoria_ingreso ==
+        data.id_categoria_ingreso).first()
+    if not categoria_ingreso:
+      raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                          detail="Categoría de ingreso no válida")
     id_categoria_gasto = None
     id_categoria_ingreso = data.id_categoria_ingreso
 
@@ -225,11 +238,27 @@ def actualizar_evento_financiero(
     evento.es_unico = data.es_unico
     evento.semana_inicio = None if data.es_unico else data.semana_inicio
 
+  # Validate and update category fields based on tipo
   if evento.tipo == "GASTO":
-    evento.id_categoria_gasto = data.id_categoria_gasto or evento.id_categoria_gasto
+    if data.id_categoria_gasto is not None:
+      # Validate category exists
+      categoria_gasto = db.query(CategoriaGasto).filter(
+          CategoriaGasto.id_categoria_gasto == data.id_categoria_gasto).first()
+      if not categoria_gasto:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Categoría de gasto no válida")
+      evento.id_categoria_gasto = data.id_categoria_gasto
     evento.id_categoria_ingreso = None
   elif evento.tipo == "INGRESO":
-    evento.id_categoria_ingreso = data.id_categoria_ingreso or evento.id_categoria_ingreso
+    if data.id_categoria_ingreso is not None:
+      # Validate category exists
+      categoria_ingreso = db.query(CategoriaIngreso).filter(
+          CategoriaIngreso.id_categoria_ingreso ==
+          data.id_categoria_ingreso).first()
+      if not categoria_ingreso:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Categoría de ingreso no válida")
+      evento.id_categoria_ingreso = data.id_categoria_ingreso
     evento.id_categoria_gasto = None
 
   db.commit()

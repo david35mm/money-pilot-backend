@@ -1,5 +1,6 @@
 from api import config
 from api.routers import auth
+from api.routers import categorias
 from api.routers import eventos_financieros
 from api.routers import financial_health
 from api.routers import perfiles
@@ -45,6 +46,7 @@ app.add_middleware(
 app.include_router(usuarios.router)
 app.include_router(perfiles.router)
 app.include_router(auth.router)
+app.include_router(categorias.router)
 app.include_router(eventos_financieros.router)
 app.include_router(financial_health.router)
 
